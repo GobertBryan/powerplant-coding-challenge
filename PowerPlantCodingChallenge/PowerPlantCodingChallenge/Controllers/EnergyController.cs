@@ -12,7 +12,7 @@ public class EnergyController (IEnergyBL energyBL) : ControllerBase
     [HttpPost("productionplan")]
     public async Task<IActionResult> ProductionPlan([FromBody] PayLoad payLoad)
     {
-        var result = energyBL.GetPowerPlantsProduction();
+        var result = energyBL.GetPowerPlantsProduction(payLoad);
 
         return Ok(result);
     }

@@ -1,8 +1,9 @@
-﻿using BusinessLogic.Results;
+﻿using BusinessLogic.Queries;
+using BusinessLogic.Results;
 
 namespace BusinessLogic.Interfaces;
 
 public interface IEnergyBL
 {
-    public Task<PowerPlantProduction> GetPowerPlantsProduction();
+    public Task<PowerPlantProduction> GetPowerPlantsProduction(PayLoad payload);
 }
