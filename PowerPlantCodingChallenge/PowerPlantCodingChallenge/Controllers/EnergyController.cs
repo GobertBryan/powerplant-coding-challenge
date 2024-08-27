@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace PowerPlantCodingChallenge.Controllers;
 
-//[ApiController]
 [Route("api/[controller]")]
 public class EnergyController (IEnergyBL energyBL) : ControllerBase
 {
@@ -12,7 +11,7 @@ public class EnergyController (IEnergyBL energyBL) : ControllerBase
     [HttpPost("productionplan")]
     public async Task<IActionResult> ProductionPlan([FromBody] PayLoad payLoad)
     {
-        var result = energyBL.GetPowerPlantsProduction(payLoad);
+        var result = await energyBL.GetPowerPlantsProduction(payLoad);
 
         return Ok(result);
     }
