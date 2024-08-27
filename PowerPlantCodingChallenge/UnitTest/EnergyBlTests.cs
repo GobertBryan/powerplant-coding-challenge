@@ -7,14 +7,17 @@ namespace UnitTest;
 
 public class EnergyBlTests
 {
-    [Fact]
-    public async Task GivenJsonPayloadInput_WhenGetPowerPlantsProduction_ThenReturnsJsonResponseWithGoodValues()
+    [Theory]
+    [InlineData("payload1", "response1")]
+    [InlineData("payload2", "response2")]
+    [InlineData("payload3", "response3")]
+    public async Task GivenJsonPayloadInput_WhenGetPowerPlantsProduction_ThenReturnsJsonResponseWithGoodValues(string inputJsonName, string outputJsonName)
     {
-        var inputPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName, "Inputs\\payload1.json");
+        var inputPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName, $"Inputs\\{inputJsonName}.json");
         var inputText = File.ReadAllText(inputPath);
         var inputJson = JsonSerializer.Deserialize<PayLoad>(inputText);
 
-        var expectedPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName, "Results\\response1.json");
+        var expectedPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName, $"Results\\{outputJsonName}.json");
         var expectedText = File.ReadAllText(expectedPath);
         var expectedJson =  JsonSerializer.Deserialize<IEnumerable<PowerPlantInfo>>(expectedText)!.ToList();
 
