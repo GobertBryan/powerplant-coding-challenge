@@ -35,8 +35,6 @@ public class EnergyBL : IEnergyBL
 
     private PowerPlantProduction GetPowerPlantProduction(MeritOrder meritOrder, Dictionary<string, decimal> fuels, decimal payloadToAchieve)
     {
-        var efficiencyList = PowerPlantsEfficiency_List.GetAll();
-
         var result = new List<PowerPlantInfo>();
 
         foreach (var merit in meritOrder.Merits.OrderBy(x => x.order))
@@ -51,15 +49,17 @@ public class EnergyBL : IEnergyBL
                 continue;
             }
 
-            var efficiency = efficiencyList.SingleOrDefault(x => x.PowerplantType == powerPlant.Type)?.Efficiency;
-
-            var unitValue = efficiency is not null
-                ? fuels.Single(x => x.Key == efficiency).Value /100
-                : 1;
-
+            var efficiency = GetEfficiency(powerPlant.Type);
+            var unitValue = GetUnitValue(efficiency, fuels);
             var minProductionValue = powerPlant.MinimumProduction * unitValue;
             var maxProductionValue = powerPlant.MaximumProduction * unitValue;
 
+            //  3 cases
+            //  1) The left payload is bigger or equal than the pmax of the actual production plan, we can take all the power from the powerplant
+            //  2) The left payload is between the pmin and the pmax of the actual production plan, we take what we need which is the value of the left payload
+            //  3) We are in, a more difficult cas where the pmin is bigger than the left payload
+            //     We need to take the pmin for the last powerplant
+            //     and for the previous one, on take what is needed to provide the exact amount for the load
             if (payloadToAchieve >= maxProductionValue)
             {
                 result.Add(new PowerPlantInfo(powerPlant.Name, maxProductionValue));
@@ -76,7 +76,7 @@ public class EnergyBL : IEnergyBL
                 var position = merit.order;
 
                 var previousMerit = meritOrder.Merits.Single(x => x.order == position);
-                var efficiencyPreviousMerit = efficiencyList.SingleOrDefault(x => x.PowerplantType == powerPlant.Type)?.Efficiency;
+                var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
                 var unitValuePreviousMerit = efficiencyPreviousMerit is not null
                     ? fuels.Single(x => x.Key == efficiencyPreviousMerit).Value / 100
                     : 1;
@@ -122,4 +122,12 @@ public class EnergyBL : IEnergyBL
 
         return fuelCostByPowerPlant;
     }
+
+    private string? GetEfficiency(string type) 
+        => PowerPlantsEfficiency_List.GetAll().SingleOrDefault(x => x.PowerplantType == type)?.Efficiency;
+
+    private decimal GetUnitValue(string? efficiency, Dictionary<string, decimal> fuels) 
+        => efficiency is not null
+                ? fuels.Single(x => x.Key == efficiency).Value / 100
+                : 1;
 }
