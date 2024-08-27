@@ -2,4 +2,4 @@
 
 namespace BusinessLogic.Results;
 
-public record PowerPlantInfo(string Name, [property: JsonPropertyName("p")] decimal Value);
+public record PowerPlantInfo([property: JsonPropertyName("name")] string Name, [property: JsonPropertyName("p")] decimal Value);

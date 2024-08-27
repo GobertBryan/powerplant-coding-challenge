@@ -8,7 +8,7 @@ namespace BusinessLogic;
 
 public class EnergyBL : IEnergyBL
 {
-    public async Task<PowerPlantProduction> GetPowerPlantsProduction(PayLoad payload)
+    public async Task<IEnumerable<PowerPlantInfo>> GetPowerPlantsProduction(PayLoad payload)
     {
         var meritOrder = GetMeritOrder(payload);
 
@@ -33,7 +33,7 @@ public class EnergyBL : IEnergyBL
         return new MeritOrder(meritOrder);
     }
 
-    private PowerPlantProduction GetPowerPlantProduction(MeritOrder meritOrder, Dictionary<string, decimal> fuels, decimal payloadToAchieve)
+    private IEnumerable<PowerPlantInfo> GetPowerPlantProduction(MeritOrder meritOrder, Dictionary<string, decimal> fuels, decimal payloadToAchieve)
     {
         var result = new List<PowerPlantInfo>();
 
@@ -91,7 +91,7 @@ public class EnergyBL : IEnergyBL
             }
         }
 
-        return new PowerPlantProduction(result);
+        return result;
     }
 
     private IEnumerable<(PowerPlant powerPlant, decimal price)> GetFuelCostByPowerPlant(PayLoad payload)

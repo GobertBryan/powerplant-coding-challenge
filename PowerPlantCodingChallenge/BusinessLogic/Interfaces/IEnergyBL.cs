@@ -5,5 +5,5 @@ namespace BusinessLogic.Interfaces;
 
 public interface IEnergyBL
 {
-    public Task<PowerPlantProduction> GetPowerPlantsProduction(PayLoad payload);
+    public Task<IEnumerable<PowerPlantInfo>> GetPowerPlantsProduction(PayLoad payload);
 }
