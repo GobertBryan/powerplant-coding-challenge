@@ -73,18 +73,17 @@ public class EnergyBL : IEnergyBL
             }
             else
             {
-                var position = merit.order;
+                var previousPosition = merit.order - 1;
 
-                var previousMerit = meritOrder.Merits.Single(x => x.order == position);
+                var previousMerit = meritOrder.Merits.Single(x => x.order == previousPosition);
                 var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
-                var unitValuePreviousMerit = efficiencyPreviousMerit is not null
-                    ? fuels.Single(x => x.Key == efficiencyPreviousMerit).Value / 100
-                    : 1;
+                var unitValuePreviousMerit = GetUnitValue(efficiencyPreviousMerit, fuels);
 
                 var maxProductionValuePreviousMerit = previousMerit.powerPlant.MaximumProduction * unitValuePreviousMerit;
                 payloadToAchieve += maxProductionValuePreviousMerit;
                 payloadToAchieve -= minProductionValue;
 
+                result.RemoveAt(result.Count - 1);
                 result.Add(new PowerPlantInfo(previousMerit.powerPlant.Name, payloadToAchieve));
                 result.Add(new PowerPlantInfo(powerPlant.Name, minProductionValue));
 
