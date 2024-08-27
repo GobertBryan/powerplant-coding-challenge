@@ -9,9 +9,9 @@ public class EnergyController (IEnergyBL energyBL) : ControllerBase
 {
 
     [HttpPost("productionplan")]
-    public async Task<IActionResult> ProductionPlan([FromBody] PayLoad payLoad)
+    public ActionResult ProductionPlan([FromBody] PayLoad payLoad)
     {
-        var result = await energyBL.GetPowerPlantsProduction(payLoad);
+        var result = energyBL.GetPowerPlantsProduction(payLoad);
 
         return Ok(result);
     }

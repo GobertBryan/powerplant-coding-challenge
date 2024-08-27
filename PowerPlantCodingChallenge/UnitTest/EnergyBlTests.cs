@@ -24,7 +24,7 @@ public class EnergyBlTests
         var bl = new EnergyBL();
 
         //  Act
-        var result = (await bl.GetPowerPlantsProduction(inputJson!)).ToList();
+        var result = bl.GetPowerPlantsProduction(inputJson!).ToList();
 
         //  Assert
         Assert.Equal(6, result.Count);

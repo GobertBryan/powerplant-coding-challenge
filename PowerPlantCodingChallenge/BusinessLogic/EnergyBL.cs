@@ -8,7 +8,7 @@ namespace BusinessLogic;
 
 public class EnergyBL : IEnergyBL
 {
-    public async Task<IEnumerable<PowerPlantInfo>> GetPowerPlantsProduction(PayLoad payload)
+    public IEnumerable<PowerPlantInfo> GetPowerPlantsProduction(PayLoad payload)
     {
         var meritOrder = GetMeritOrder(payload);
 
