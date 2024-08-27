@@ -12,7 +12,7 @@ public class EnergyBL : IEnergyBL
     {
         var meritOrder = GetMeritOrder(payload);
 
-        var powerPlantProduction = GetPowerPlantProduction(meritOrder, payload.Load);
+        var powerPlantProduction = GetPowerPlantProduction(meritOrder, payload.Fuels, payload.Load);
 
         return powerPlantProduction;
     }
@@ -23,7 +23,7 @@ public class EnergyBL : IEnergyBL
 
         var powerPlantsWithFuelPrice = GetFuelPriceForPowerPlants(payload);
 
-        var powerPlantsWithFuelPriceOrdered = powerPlantsWithFuelPrice.OrderBy(x => x.price).ThenBy(x => x.powerPlant.MinimumProduction).ThenBy(x => x.powerPlant.MaximumProduction).ToList();
+        var powerPlantsWithFuelPriceOrdered = powerPlantsWithFuelPrice.OrderBy(x => x.price).ThenBy(x => x.powerPlant.MinimumProduction).ThenByDescending(x => x.powerPlant.MaximumProduction).ToList();
 
         for (var i = 0; i < powerPlantsWithFuelPriceOrdered.Count; i++)
         {
@@ -33,9 +33,65 @@ public class EnergyBL : IEnergyBL
         return new MeritOrder(meritOrder);
     }
 
-    private PowerPlantProduction GetPowerPlantProduction(MeritOrder meritOrder, decimal payloadToAchieve)
+    private PowerPlantProduction GetPowerPlantProduction(MeritOrder meritOrder, Dictionary<string, decimal> fuels, decimal payloadToAchieve)
     {
-        
+        var efficiencyList = PowerPlantsEfficiencyList.GetAll();
+
+        var result = new List<PowerPlantInfo>();
+
+        foreach (var merit in meritOrder.Merits.OrderBy(x => x.order))
+        {
+            var powerPlant = merit.powerPlant;
+
+            if (payloadToAchieve == 0)
+            {
+                result.Add(new PowerPlantInfo(powerPlant.Name, 0));
+
+                continue;
+            }
+
+            var efficiency = efficiencyList.SingleOrDefault(x => x.PowerplantType == powerPlant.Type)?.Efficiency;
+
+            var unitValue = efficiency is not null
+                ? fuels.Single(x => x.Key == efficiency).Value /100
+                : 1;
+
+            var minProductionValue = powerPlant.MinimumProduction * unitValue;
+            var maxProductionValue = powerPlant.MaximumProduction * unitValue;
+
+            if (payloadToAchieve >= maxProductionValue)
+            {
+                result.Add(new PowerPlantInfo(powerPlant.Name, maxProductionValue));
+                payloadToAchieve -= maxProductionValue;
+
+            }
+            else if (payloadToAchieve >= minProductionValue && payloadToAchieve < maxProductionValue)
+            {
+                result.Add(new PowerPlantInfo(powerPlant.Name, payloadToAchieve));
+                payloadToAchieve = 0;
+            }
+            else
+            {
+                var position = merit.order;
+
+                var previousMerit = meritOrder.Merits.Single(x => x.order == position);
+                var efficiencyPreviousMerit = efficiencyList.SingleOrDefault(x => x.PowerplantType == powerPlant.Type)?.Efficiency;
+                var unitValuePreviousMerit = efficiency is not null
+                    ? fuels.Single(x => x.Key == efficiency).Value / 100
+                    : 1;
+
+                var maxProductionValuePreviousMerit = previousMerit.powerPlant.MaximumProduction * unitValuePreviousMerit;
+                payloadToAchieve += maxProductionValuePreviousMerit;
+
+                payloadToAchieve -= minProductionValue;
+                result.Add(new PowerPlantInfo(previousMerit.powerPlant.Name, payloadToAchieve));
+                result.Add(new PowerPlantInfo(powerPlant.Name, minProductionValue));
+
+                payloadToAchieve = 0;
+            }
+        }
+
+        return new PowerPlantProduction(result);
     }
 
     private IEnumerable<(PowerPlant powerPlant, decimal price)> GetFuelPriceForPowerPlants(PayLoad payload)
