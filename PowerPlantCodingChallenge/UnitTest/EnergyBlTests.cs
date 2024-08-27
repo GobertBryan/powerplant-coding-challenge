@@ -11,6 +11,7 @@ public class EnergyBlTests
     [InlineData("payload1", "response1")]
     [InlineData("payload2", "response2")]
     [InlineData("payload3", "response3")]
+    [InlineData("payload4", "response4")]
     public async Task GivenJsonPayloadInput_WhenGetPowerPlantsProduction_ThenReturnsJsonResponseWithGoodValues(string inputJsonName, string outputJsonName)
     {
         var inputPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName, $"Inputs\\{inputJsonName}.json");

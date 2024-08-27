@@ -76,6 +76,13 @@ public class EnergyBL : IEnergyBL
                 var previousPosition = merit.order - 1;
 
                 var previousMerit = meritOrder.Merits.Single(x => x.order == previousPosition);
+
+                if (result[result.Count - 1].Value == 0 && minProductionValue > payloadToAchieve)
+                {
+                    result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
+                    continue;
+                }
+
                 var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
                 var unitValuePreviousMerit = GetUnitValue(efficiencyPreviousMerit, fuels);
 
