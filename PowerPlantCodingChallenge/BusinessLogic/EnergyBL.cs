@@ -41,7 +41,7 @@ public class EnergyBL : IEnergyBL
         {
             var powerPlant = merit.powerPlant;
 
-            //  if the objectif is reached we weep looping to add power plants with 0 produciton
+            //  if the objectif is reached we keep looping to add power plants with 0 produciton
             if (payloadToAchieve == 0)
             {
                 result.Add(new PowerPlantInfo(powerPlant.Name, 0));
@@ -51,7 +51,10 @@ public class EnergyBL : IEnergyBL
 
             var efficiency = GetEfficiency(powerPlant.Type);
             var unitValue = GetUnitValue(efficiency, fuels);
-            var minProductionValue = powerPlant.MinimumProduction * unitValue;
+
+            //var minProduction = powerPlant.MinimumProduction != 0 ? powerPlant.MinimumProduction : powerPlant.MaximumProduction;
+            var minProduction = powerPlant.Type != "windturbine" ? powerPlant.MinimumProduction : powerPlant.MaximumProduction;
+            var minProductionValue = minProduction * unitValue;
             var maxProductionValue = powerPlant.MaximumProduction * unitValue;
 
             //  3 cases
@@ -73,15 +76,44 @@ public class EnergyBL : IEnergyBL
             }
             else
             {
-                var previousPosition = merit.order - 1;
+                // TODO: NEW CODE TO IMRPOVE
 
-                var previousMerit = meritOrder.Merits.Single(x => x.order == previousPosition);
-
-                if (result[result.Count - 1].Value == 0 && minProductionValue > payloadToAchieve)
+                if (result.Count == 0 && minProductionValue > payloadToAchieve)
                 {
                     result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
                     continue;
                 }
+
+                //  END OF NEW CODE
+
+                var previousPosition = merit.order - 1;
+
+                var previousMerit = meritOrder.Merits.Single(x => x.order == previousPosition);
+
+                if (result.Single(x => x.Name == previousMerit.powerPlant.Name).Value == 0 && minProductionValue > payloadToAchieve)
+                {
+                    result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
+                    continue;
+                }
+
+                // TODO: NEW CODE TO IMRPOVE
+
+                var lastPowerPlantInfoValued = result.Where(x => x.Value != 0).LastOrDefault();
+                var lastPowerPlantValued = meritOrder.Merits.SingleOrDefault(x => x.powerPlant.Name == lastPowerPlantInfoValued?.Name)?.powerPlant;
+                var lastMinProductionValued = lastPowerPlantValued?.Type != "windturbine" ? lastPowerPlantValued?.MinimumProduction : lastPowerPlantValued?.MaximumProduction;
+
+                if (lastPowerPlantInfoValued is not null && lastPowerPlantValued is not null && lastMinProductionValued is not null && (lastMinProductionValued + minProduction > payloadToAchieve + lastPowerPlantInfoValued.Value))
+                {
+                    result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
+                    continue;
+                }
+
+                //if (lastPowerPlantInfoValued is not null && lastPowerPlantValued is not null && lastMinProductionValued is not null && (lastMinProductionValued + minProduction <= payloadToAchieve))
+                //{
+                //    lastPowerPlantInfoValued.Value = (decimal)lastMinProductionValued;
+                //}
+
+                //  END OF NEW CODE
 
                 var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
                 var unitValuePreviousMerit = GetUnitValue(efficiencyPreviousMerit, fuels);
