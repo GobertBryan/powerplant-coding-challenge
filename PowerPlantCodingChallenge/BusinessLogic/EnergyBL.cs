@@ -62,13 +62,13 @@ public class EnergyBL : IEnergyBL
             //     and for the previous one, on take what is needed to provide the exact amount for the load
             if (payloadToAchieve >= maxProductionValue)
             {
-                result.Add(new PowerPlantInfo(powerPlant.Name, maxProductionValue));
+                result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(maxProductionValue, 1)));
                 payloadToAchieve -= maxProductionValue;
 
             }
             else if (payloadToAchieve >= minProductionValue && payloadToAchieve < maxProductionValue)
             {
-                result.Add(new PowerPlantInfo(powerPlant.Name, payloadToAchieve));
+                result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(payloadToAchieve, 1)));
                 payloadToAchieve = 0;
             }
             else
@@ -84,8 +84,8 @@ public class EnergyBL : IEnergyBL
                 payloadToAchieve -= minProductionValue;
 
                 result.RemoveAt(result.Count - 1);
-                result.Add(new PowerPlantInfo(previousMerit.powerPlant.Name, payloadToAchieve));
-                result.Add(new PowerPlantInfo(powerPlant.Name, minProductionValue));
+                result.Add(new PowerPlantInfo(previousMerit.powerPlant.Name, Math.Round(payloadToAchieve, 1)));
+                result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(minProductionValue, 1)));
 
                 payloadToAchieve = 0;
             }
