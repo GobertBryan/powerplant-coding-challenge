@@ -1,13 +1,19 @@
+using BusinessLogic.Interfaces;
+using BusinessLogic.Queries;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PowerPlantCodingChallenge.Controllers;
 
+//[ApiController]
 [Route("api/[controller]")]
-public class EnergyController : ControllerBase
+public class EnergyController (IEnergyBL energyBL) : ControllerBase
 {
+
     [HttpPost("productionplan")]
-    public decimal ProductionPlan([FromBody] PayLoad payLoad)
+    public async Task<IActionResult> ProductionPlan([FromBody] PayLoad payLoad)
     {
-        return payLoad.Load;
+        var result = energyBL.GetPowerPlantsProduction();
+
+        return Ok(result);
     }
 }
