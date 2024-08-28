@@ -52,7 +52,7 @@ public class EnergyBL : IEnergyBL
             var efficiency = GetEfficiency(powerPlant.Type);
             var unitValue = GetUnitValue(efficiency, fuels);
 
-            var minProduction = powerPlant.Type != "windturbine" ? powerPlant.MinimumProduction : powerPlant.MaximumProduction;
+            var minProduction = MinProductionMustEqualsMaxProduction(powerPlant.Type) ? powerPlant.MaximumProduction : powerPlant.MinimumProduction;
             var minProductionValue = minProduction * unitValue;
             var maxProductionValue = powerPlant.MaximumProduction * unitValue;
 
@@ -94,8 +94,8 @@ public class EnergyBL : IEnergyBL
                 //     then, we add the actual power plant with the value 0
                 //     IMPORTANT : Given the fact that when we put a value in the result for the last valued power, we removed this value from the payloadToAchieve,
                 //                 we need to add this value tho the actual value of payloadToAchieve to compare with the sum of the actual pmin and the pmin from the last valued power plan
-                var lastPowerPlantMeritValued = meritOrder.Merits.SingleOrDefault(x => x.powerPlant.Name == lastPowerPlantInfoValued?.Name)?.powerPlant;
-                var lastMinProductionValued = lastPowerPlantMeritValued?.Type != "windturbine" ? lastPowerPlantMeritValued?.MinimumProduction : lastPowerPlantMeritValued?.MaximumProduction;
+                var lastPowerPlantMeritValued = meritOrder.Merits.Single(x => x.powerPlant.Name == lastPowerPlantInfoValued?.Name).powerPlant;
+                var lastMinProductionValued = MinProductionMustEqualsMaxProduction(lastPowerPlantMeritValued.Type) ? lastPowerPlantMeritValued.MaximumProduction : lastPowerPlantMeritValued.MinimumProduction;
 
                 if (lastMinProductionValued + minProduction > payloadToAchieve + lastPowerPlantInfoValued.Value)
                 {
@@ -159,6 +159,8 @@ public class EnergyBL : IEnergyBL
         => efficiency is not null
                 ? fuels.Single(x => x.Key == efficiency).Value / 100
                 : 1;
+
+    private bool MinProductionMustEqualsMaxProduction(string type) => type == "windturbine";
 
     private void AddPowerPlantInfo(List<PowerPlantInfo> list, PowerPlantInfo powerPlantInfo) => list.Add(new PowerPlantInfo(powerPlantInfo.Name, Math.Round(powerPlantInfo.Value, 1)));
 }
