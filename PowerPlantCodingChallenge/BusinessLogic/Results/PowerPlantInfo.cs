@@ -14,5 +14,10 @@ public record PowerPlantInfo
     public string Name { get; }
 
     [JsonPropertyName("p")]
-    public decimal Value { get; set; }
+    public decimal Value { get; private set; }
+
+    public void UpdateValue(decimal value)
+    {
+        Value = value;
+    }
 }

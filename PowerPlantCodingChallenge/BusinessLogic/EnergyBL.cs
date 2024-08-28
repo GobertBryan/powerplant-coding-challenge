@@ -113,7 +113,7 @@ public class EnergyBL : IEnergyBL
                     payloadToAchieve += previousPowerPlantResult.Value;
                     payloadToAchieve -= minProductionValue;
 
-                    previousPowerPlantResult.Value = payloadToAchieve;
+                    previousPowerPlantResult.UpdateValue(payloadToAchieve);
                     AddPowerPlantInfo(result, new PowerPlantInfo(powerPlant.Name, minProductionValue));
 
                     payloadToAchieve = 0;
