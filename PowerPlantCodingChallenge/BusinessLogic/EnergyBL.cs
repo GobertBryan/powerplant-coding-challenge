@@ -94,8 +94,8 @@ public class EnergyBL : IEnergyBL
                 //     then, we add the actual power plant with the value 0
                 //     IMPORTANT : Given the fact that when we put a value in the result for the last valued power, we removed this value from the payloadToAchieve,
                 //                 we need to add this value tho the actual value of payloadToAchieve to compare with the sum of the actual pmin and the pmin from the last valued power plan
-                var lastPowerPlantValued = meritOrder.Merits.SingleOrDefault(x => x.powerPlant.Name == lastPowerPlantInfoValued?.Name)?.powerPlant;
-                var lastMinProductionValued = lastPowerPlantValued?.Type != "windturbine" ? lastPowerPlantValued?.MinimumProduction : lastPowerPlantValued?.MaximumProduction;
+                var lastPowerPlantMeritValued = meritOrder.Merits.SingleOrDefault(x => x.powerPlant.Name == lastPowerPlantInfoValued?.Name)?.powerPlant;
+                var lastMinProductionValued = lastPowerPlantMeritValued?.Type != "windturbine" ? lastPowerPlantMeritValued?.MinimumProduction : lastPowerPlantMeritValued?.MaximumProduction;
 
                 if (lastMinProductionValued + minProduction > payloadToAchieve + lastPowerPlantInfoValued.Value)
                 {
@@ -108,17 +108,12 @@ public class EnergyBL : IEnergyBL
                 //     and modify the value of the last valued power plan in the result to be the value of the payloadToAchieve
                 else
                 {
-                    var previousMerit = meritOrder.Merits.Single(x => x.powerPlant.Name == lastPowerPlantValued!.Name);
+                    var previousPowerPlantResult = result.Single(x => x.Name == lastPowerPlantMeritValued!.Name);
 
-                    var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
-                    var unitValuePreviousMerit = GetUnitValue(efficiencyPreviousMerit, fuels);
-                    var maxProductionValuePreviousMerit = previousMerit.powerPlant.MaximumProduction * unitValuePreviousMerit;
-
-                    payloadToAchieve += maxProductionValuePreviousMerit;
+                    payloadToAchieve += previousPowerPlantResult.Value;
                     payloadToAchieve -= minProductionValue;
 
-                    result.RemoveAt(result.Count - 1);
-                    AddPowerPlantInfo(result, new PowerPlantInfo(previousMerit.powerPlant.Name, payloadToAchieve));
+                    previousPowerPlantResult.Value = payloadToAchieve;
                     AddPowerPlantInfo(result, new PowerPlantInfo(powerPlant.Name, minProductionValue));
 
                     payloadToAchieve = 0;
