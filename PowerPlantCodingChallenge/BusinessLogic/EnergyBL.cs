@@ -23,7 +23,7 @@ public class EnergyBL : IEnergyBL
 
         var powerPlantsWithFuelCost = GetFuelCostByPowerPlant(payload);
 
-        var powerPlantsWithFuelPriceOrdered = powerPlantsWithFuelCost.OrderBy(x => x.price).ThenBy(x => x.powerPlant.MinimumProduction).ThenByDescending(x => x.powerPlant.MaximumProduction).ToList();
+        var powerPlantsWithFuelPriceOrdered = powerPlantsWithFuelCost.OrderBy(x => x.price).ThenByDescending(x => x.powerPlant.MinimumProduction).ThenByDescending(x => x.powerPlant.MaximumProduction).ToList();
 
         for (var i = 0; i < powerPlantsWithFuelPriceOrdered.Count; i++)
         {
@@ -41,7 +41,7 @@ public class EnergyBL : IEnergyBL
         {
             var powerPlant = merit.powerPlant;
 
-            //  if the objectif is reached we keep looping to add power plants with 0 produciton
+            //  If the objectif is reached we keep looping to add power plants with 0 produciton
             if (payloadToAchieve == 0)
             {
                 result.Add(new PowerPlantInfo(powerPlant.Name, 0));
@@ -52,7 +52,6 @@ public class EnergyBL : IEnergyBL
             var efficiency = GetEfficiency(powerPlant.Type);
             var unitValue = GetUnitValue(efficiency, fuels);
 
-            //var minProduction = powerPlant.MinimumProduction != 0 ? powerPlant.MinimumProduction : powerPlant.MaximumProduction;
             var minProduction = powerPlant.Type != "windturbine" ? powerPlant.MinimumProduction : powerPlant.MaximumProduction;
             var minProductionValue = minProduction * unitValue;
             var maxProductionValue = powerPlant.MaximumProduction * unitValue;
@@ -61,65 +60,68 @@ public class EnergyBL : IEnergyBL
             //  1) The left payload is bigger or equal than the pmax of the actual production plan, we can take all the power from the powerplant
             //  2) The left payload is between the pmin and the pmax of the actual production plan, we take what we need which is the value of the left payload
             //  3) We are in, a more difficult cas where the pmin is bigger than the left payload
-            //     We need to take the pmin for the last powerplant
-            //     and for the previous one, on take what is needed to provide the exact amount for the load
+            //     More details on the third point
+
+            //  1
             if (payloadToAchieve >= maxProductionValue)
             {
                 result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(maxProductionValue, 1)));
                 payloadToAchieve -= maxProductionValue;
 
             }
+
+            //  2
             else if (payloadToAchieve >= minProductionValue && payloadToAchieve < maxProductionValue)
             {
                 result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(payloadToAchieve, 1)));
                 payloadToAchieve = 0;
             }
-            //  Explanation if we are in a more complicated case
-            //  1) If we haven't power plant with value in the result and the actual power plant has a pmin bigger than the payloadToAchieve,
-            //     we add the actual power plant with the value 0
-            //  2) 
+
+            //  3) This part is subdivised in 3 points (a,b and c)
             else
             {
-                //  1
-                var previousPosition = merit.order - 1;
-                var previousMerit = meritOrder.Merits.SingleOrDefault(x => x.order == previousPosition);
-
-                if (previousMerit is null || result.Single(x => x.Name == previousMerit.powerPlant.Name).Value == 0 && minProductionValue > payloadToAchieve)
+                //  a) If there is no powerplant with a value yet in the answer and given the fact thant we are in the third case where pmin is bigger than the payloadToAchieve
+                //     then, we can't use this power plant
+                var lastPowerPlantInfoValued = result.Where(x => x.Value != 0).LastOrDefault();
+                if (lastPowerPlantInfoValued is null)
                 {
                     result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
                     continue;
                 }
 
-                // TODO: NEW CODE TO IMRPOVE
-
-                // 2
-
-                var lastPowerPlantInfoValued = result.Where(x => x.Value != 0).LastOrDefault();
+                //  b) If we are in the case where the sum of the actual pmin and the pmin from the last valued power plan in the result is bigger than the payloadToAchieve
+                //     then, we add the actual power plant with the value 0
+                //     IMPORTANT : Given the fact that when we put a value in the result for the last valued power, we removed this value from the payloadToAchieve,
+                //                 we need to add this value tho the actual value of payloadToAchieve to compare with the sum of the actual pmin and the pmin from the last valued power plan
                 var lastPowerPlantValued = meritOrder.Merits.SingleOrDefault(x => x.powerPlant.Name == lastPowerPlantInfoValued?.Name)?.powerPlant;
                 var lastMinProductionValued = lastPowerPlantValued?.Type != "windturbine" ? lastPowerPlantValued?.MinimumProduction : lastPowerPlantValued?.MaximumProduction;
 
-                if (lastPowerPlantInfoValued is not null && lastPowerPlantValued is not null && lastMinProductionValued is not null && (lastMinProductionValued + minProduction > payloadToAchieve + lastPowerPlantInfoValued.Value))
+                if (lastMinProductionValued + minProduction > payloadToAchieve + lastPowerPlantInfoValued.Value)
                 {
                     result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
                     continue;
                 }
 
-                //  END OF NEW CODE
+                //  c) In the last possible case, we need to use the pmin of the actual power plant for the actual power plant
+                //     and modify the value of the last valued power plan in the result to be the value of the payloadToAchieve
+                else
+                {
+                    var previousPosition = merit.order - 1;
+                    var previousMerit = meritOrder.Merits.Single(x => x.order == previousPosition);
 
-                // 3
+                    var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
+                    var unitValuePreviousMerit = GetUnitValue(efficiencyPreviousMerit, fuels);
 
-                var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
-                var unitValuePreviousMerit = GetUnitValue(efficiencyPreviousMerit, fuels);
+                    var maxProductionValuePreviousMerit = previousMerit.powerPlant.MaximumProduction * unitValuePreviousMerit;
+                    payloadToAchieve += maxProductionValuePreviousMerit;
+                    payloadToAchieve -= minProductionValue;
 
-                var maxProductionValuePreviousMerit = previousMerit.powerPlant.MaximumProduction * unitValuePreviousMerit;
-                payloadToAchieve += maxProductionValuePreviousMerit;
-                payloadToAchieve -= minProductionValue;
+                    result.RemoveAt(result.Count - 1);
+                    result.Add(new PowerPlantInfo(previousMerit.powerPlant.Name, Math.Round(payloadToAchieve, 1)));
+                    result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(minProductionValue, 1)));
 
-                result.RemoveAt(result.Count - 1);
-                result.Add(new PowerPlantInfo(previousMerit.powerPlant.Name, Math.Round(payloadToAchieve, 1)));
-                result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(minProductionValue, 1)));
-
-                payloadToAchieve = 0;
+                    payloadToAchieve = 0;
+                }           
             }
         }
 
