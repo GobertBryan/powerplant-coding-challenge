@@ -44,7 +44,7 @@ public class EnergyBL : IEnergyBL
             //  If the objectif is reached we keep looping to add power plants with 0 produciton
             if (payloadToAchieve == 0)
             {
-                result.Add(new PowerPlantInfo(powerPlant.Name, 0));
+                AddPowerPlantInfo(result, new PowerPlantInfo(powerPlant.Name, 0M));
 
                 continue;
             }
@@ -65,7 +65,7 @@ public class EnergyBL : IEnergyBL
             //  1
             if (payloadToAchieve >= maxProductionValue)
             {
-                result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(maxProductionValue, 1)));
+                AddPowerPlantInfo(result, new PowerPlantInfo(powerPlant.Name, maxProductionValue));
                 payloadToAchieve -= maxProductionValue;
 
             }
@@ -73,7 +73,7 @@ public class EnergyBL : IEnergyBL
             //  2
             else if (payloadToAchieve >= minProductionValue && payloadToAchieve < maxProductionValue)
             {
-                result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(payloadToAchieve, 1)));
+                AddPowerPlantInfo(result, new PowerPlantInfo(powerPlant.Name, payloadToAchieve));
                 payloadToAchieve = 0;
             }
 
@@ -85,7 +85,8 @@ public class EnergyBL : IEnergyBL
                 var lastPowerPlantInfoValued = result.Where(x => x.Value != 0).LastOrDefault();
                 if (lastPowerPlantInfoValued is null)
                 {
-                    result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
+                    AddPowerPlantInfo(result, new PowerPlantInfo(powerPlant.Name, 0M));
+
                     continue;
                 }
 
@@ -98,7 +99,8 @@ public class EnergyBL : IEnergyBL
 
                 if (lastMinProductionValued + minProduction > payloadToAchieve + lastPowerPlantInfoValued.Value)
                 {
-                    result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
+                    AddPowerPlantInfo(result, new PowerPlantInfo(powerPlant.Name, 0M));
+
                     continue;
                 }
 
@@ -116,8 +118,8 @@ public class EnergyBL : IEnergyBL
                     payloadToAchieve -= minProductionValue;
 
                     result.RemoveAt(result.Count - 1);
-                    result.Add(new PowerPlantInfo(previousMerit.powerPlant.Name, Math.Round(payloadToAchieve, 1)));
-                    result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(minProductionValue, 1)));
+                    AddPowerPlantInfo(result, new PowerPlantInfo(previousMerit.powerPlant.Name, payloadToAchieve));
+                    AddPowerPlantInfo(result, new PowerPlantInfo(powerPlant.Name, minProductionValue));
 
                     payloadToAchieve = 0;
                 }           
@@ -162,4 +164,6 @@ public class EnergyBL : IEnergyBL
         => efficiency is not null
                 ? fuels.Single(x => x.Key == efficiency).Value / 100
                 : 1;
+
+    private void AddPowerPlantInfo(List<PowerPlantInfo> list, PowerPlantInfo powerPlantInfo) => list.Add(new PowerPlantInfo(powerPlantInfo.Name, Math.Round(powerPlantInfo.Value, 1)));
 }
