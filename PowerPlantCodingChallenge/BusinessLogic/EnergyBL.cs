@@ -106,13 +106,12 @@ public class EnergyBL : IEnergyBL
                 //     and modify the value of the last valued power plan in the result to be the value of the payloadToAchieve
                 else
                 {
-                    var previousPosition = merit.order - 1;
-                    var previousMerit = meritOrder.Merits.Single(x => x.order == previousPosition);
+                    var previousMerit = meritOrder.Merits.Single(x => x.powerPlant.Name == lastPowerPlantValued!.Name);
 
                     var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
                     var unitValuePreviousMerit = GetUnitValue(efficiencyPreviousMerit, fuels);
-
                     var maxProductionValuePreviousMerit = previousMerit.powerPlant.MaximumProduction * unitValuePreviousMerit;
+
                     payloadToAchieve += maxProductionValuePreviousMerit;
                     payloadToAchieve -= minProductionValue;
 
