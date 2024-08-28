@@ -52,7 +52,7 @@ public class EnergyBL : IEnergyBL
             var efficiency = GetEfficiency(powerPlant.Type);
             var unitValue = GetUnitValue(efficiency, fuels);
 
-            var minProduction = MinProductionMustEqualsMaxProduction(powerPlant.Type) ? powerPlant.MaximumProduction : powerPlant.MinimumProduction;
+            var minProduction = GetMinProduction(powerPlant);
             var minProductionValue = minProduction * unitValue;
             var maxProductionValue = powerPlant.MaximumProduction * unitValue;
 
@@ -95,7 +95,7 @@ public class EnergyBL : IEnergyBL
                 //     IMPORTANT : Given the fact that when we put a value in the result for the last valued power, we removed this value from the payloadToAchieve,
                 //                 we need to add this value tho the actual value of payloadToAchieve to compare with the sum of the actual pmin and the pmin from the last valued power plan
                 var lastPowerPlantMeritValued = meritOrder.Merits.Single(x => x.powerPlant.Name == lastPowerPlantInfoValued?.Name).powerPlant;
-                var lastMinProductionValued = MinProductionMustEqualsMaxProduction(lastPowerPlantMeritValued.Type) ? lastPowerPlantMeritValued.MaximumProduction : lastPowerPlantMeritValued.MinimumProduction;
+                var lastMinProductionValued = GetMinProduction(lastPowerPlantMeritValued);
 
                 if (lastMinProductionValued + minProduction > payloadToAchieve + lastPowerPlantInfoValued.Value)
                 {
@@ -160,7 +160,7 @@ public class EnergyBL : IEnergyBL
                 ? fuels.Single(x => x.Key == efficiency).Value / 100
                 : 1;
 
-    private bool MinProductionMustEqualsMaxProduction(string type) => type == "windturbine";
+    private decimal GetMinProduction(PowerPlant powerPlant) => powerPlant.Type == "windturbine" ? powerPlant.MaximumProduction : powerPlant.MinimumProduction;
 
     private void AddPowerPlantInfo(List<PowerPlantInfo> list, PowerPlantInfo powerPlantInfo) => list.Add(new PowerPlantInfo(powerPlantInfo.Name, Math.Round(powerPlantInfo.Value, 1)));
 }
