@@ -74,29 +74,25 @@ public class EnergyBL : IEnergyBL
                 result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(payloadToAchieve, 1)));
                 payloadToAchieve = 0;
             }
+            //  Explanation if we are in a more complicated case
+            //  1) If we haven't power plant with value in the result and the actual power plant has a pmin bigger than the payloadToAchieve,
+            //     we add the actual power plant with the value 0
+            //  2) 
             else
             {
-                // TODO: NEW CODE TO IMRPOVE
-
-                if (result.Count == 0 && minProductionValue > payloadToAchieve)
-                {
-                    result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
-                    continue;
-                }
-
-                //  END OF NEW CODE
-
+                //  1
                 var previousPosition = merit.order - 1;
+                var previousMerit = meritOrder.Merits.SingleOrDefault(x => x.order == previousPosition);
 
-                var previousMerit = meritOrder.Merits.Single(x => x.order == previousPosition);
-
-                if (result.Single(x => x.Name == previousMerit.powerPlant.Name).Value == 0 && minProductionValue > payloadToAchieve)
+                if (previousMerit is null || result.Single(x => x.Name == previousMerit.powerPlant.Name).Value == 0 && minProductionValue > payloadToAchieve)
                 {
                     result.Add(new PowerPlantInfo(powerPlant.Name, Math.Round(0M, 1)));
                     continue;
                 }
 
                 // TODO: NEW CODE TO IMRPOVE
+
+                // 2
 
                 var lastPowerPlantInfoValued = result.Where(x => x.Value != 0).LastOrDefault();
                 var lastPowerPlantValued = meritOrder.Merits.SingleOrDefault(x => x.powerPlant.Name == lastPowerPlantInfoValued?.Name)?.powerPlant;
@@ -108,12 +104,9 @@ public class EnergyBL : IEnergyBL
                     continue;
                 }
 
-                //if (lastPowerPlantInfoValued is not null && lastPowerPlantValued is not null && lastMinProductionValued is not null && (lastMinProductionValued + minProduction <= payloadToAchieve))
-                //{
-                //    lastPowerPlantInfoValued.Value = (decimal)lastMinProductionValued;
-                //}
-
                 //  END OF NEW CODE
+
+                // 3
 
                 var efficiencyPreviousMerit = GetEfficiency(previousMerit.powerPlant.Type);
                 var unitValuePreviousMerit = GetUnitValue(efficiencyPreviousMerit, fuels);
